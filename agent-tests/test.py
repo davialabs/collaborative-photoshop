@@ -2,6 +2,7 @@ from typing_extensions import TypedDict, Any
 import asyncio
 
 from agents import Agent, RunContextWrapper, function_tool, Runner
+from openai_vivalehack.image_modifications.image_modification import ImageModifier
 
 
 class Location(TypedDict):
@@ -34,16 +35,26 @@ def read_file(
     return "<file contents>"
 
 
+@function_tool
+def modify_image(image_path: str) -> str:
+    """Modify the image at the given path.
+
+    Args:
+        image_path: The path to the image to modify.
+    """
+    return f"image modified: {image_path}"
+
+
 agent = Agent(
     name="Assistant",
-    tools=[fetch_weather, read_file],
+    tools=[fetch_weather, read_file, modify_image],
 )
 
 
 async def main():
     result = await Runner.run(
         agent,
-        "What is the weather in SF?",
+        "modify the image at the given path: /Users/jason/Desktop/IMG_0001.jpg",
     )
     print(result.final_output)
 
