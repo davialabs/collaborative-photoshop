@@ -228,6 +228,7 @@ def go_to_image_index(ctx: RunContextWrapper[AgentContext], index: int) -> str:
 def adjust_contrast(ctx: RunContextWrapper[AgentContext], percentage: float) -> str:
     """
     Adjust the contrast of a base64 encoded image by a percentage.
+    THIS FUNCTION DOES NOT NEED THE IMAGE, ONLY THE PERCENTAGE IS A PARAMETER.
 
     Args:
         base64_image (str): Base64 encoded image data (with or without data URL prefix)
