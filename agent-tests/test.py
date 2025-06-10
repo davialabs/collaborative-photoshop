@@ -1,62 +1,43 @@
 from typing_extensions import TypedDict, Any
 import asyncio
+import base64
+import tempfile
+import os
 
 from agents import Agent, RunContextWrapper, function_tool, Runner
-from openai_vivalehack.image_modifications.image_modification import ImageModifier
-
-
-class Location(TypedDict):
-    lat: float
-    long: float
-
-
-@function_tool
-async def fetch_weather(location: Location) -> str:
-    """Fetch the weather for a given location.
-
-    Args:
-        location: The location to fetch the weather for.
-    """
-    # In real life, we'd fetch the weather from a weather API
-    return "sunny"
-
-
-@function_tool(name_override="fetch_data")
-def read_file(
-    ctx: RunContextWrapper[Any], path: str, directory: str | None = None
-) -> str:
-    """Read the contents of a file.
-
-    Args:
-        path: The path to the file to read.
-        directory: The directory to read the file from.
-    """
-    # In real life, we'd read the file from the file system
-    return "<file contents>"
-
-
-@function_tool
-def modify_image(image_path: str) -> str:
-    """Modify the image at the given path.
-
-    Args:
-        image_path: The path to the image to modify.
-    """
-    return f"image modified: {image_path}"
+from openai_vivalehack.image_modifications.image_modification import (
+    adjust_luminosity_base64,
+    name_image,
+)
+from openai_vivalehack.model import AgentContext
 
 
 agent = Agent(
-    name="Assistant",
-    tools=[fetch_weather, read_file, modify_image],
+    name="Image Modifier Agent",
+    tools=[adjust_luminosity_base64, name_image],
 )
 
 
 async def main():
+    with open(
+        "/Users/rubenillouz/project/openai-vivalehack/image_modifications_test/kermit.jpg",
+        "rb",
+    ) as img_file:
+        image_b64 = base64.b64encode(img_file.read()).decode("utf-8")
+
+    agent_context = AgentContext(image_b64=image_b64, new_image_b64="")
+
     result = await Runner.run(
-        agent,
-        "modify the image at the given path: /Users/jason/Desktop/IMG_0001.jpg",
+        starting_agent=agent,
+        context=agent_context,
+        input="Adjust the luminosity of the image by 60%",
     )
     print(result.final_output)
+
+    # Save the modified image as PNG
+    modified_image_data = base64.b64decode(result.context_wrapper.context.new_image_b64)  # type: ignore
+    with open("modified_image.png", "wb") as f:
+        f.write(modified_image_data)
 
 
 if __name__ == "__main__":
