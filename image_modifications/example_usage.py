@@ -19,14 +19,16 @@ def demonstrate_image_modifications():
     Demonstrate various image modification capabilities.
     """
 
-    # Note: Replace 'sample_image.jpg' with the path to your actual image
-    image_path = "sample_image.jpg"
+    # Use forward slashes for path to avoid escape sequence issues
+    image_path = "image_modifications/kermit.jpg"
 
-    # Check if image exists (for demo purposes, we'll create a placeholder message)
+    # Check if image exists
     if not os.path.exists(image_path):
         print(f"⚠️  Demo image '{image_path}' not found!")
         print("To run this demo:")
-        print("1. Place an image file named 'sample_image.jpg' in this directory, or")
+        print(
+            "1. Place an image file named 'kermit.jpg' in the image_modifications directory, or"
+        )
         print("2. Modify the 'image_path' variable to point to your image")
         print("\nExample usage patterns are shown below:")
         show_usage_examples()
@@ -46,12 +48,12 @@ def demonstrate_image_modifications():
         # Example 1: Adjust luminosity
         print("\n✨ Example 1: Adjusting luminosity...")
         modifier.adjust_luminosity(25)  # Brighten by 25%
-        modifier.save_image("output_bright.jpg")
+        modifier.display_comparison()
 
         # Reset and try darkening
         modifier.reset_to_original()
         modifier.adjust_luminosity(-30)  # Darken by 30%
-        modifier.save_image("output_dark.jpg")
+        modifier.display_comparison()
 
         # Example 2: Apply color schemes
         print("\n🎨 Example 2: Applying color schemes...")
@@ -62,8 +64,8 @@ def demonstrate_image_modifications():
         for scheme in color_schemes:
             modifier.reset_to_original()
             modifier.change_color_scheme(scheme)
-            modifier.save_image(f"output_{scheme}.jpg")
             print(f"   ✅ Applied {scheme} color scheme")
+            modifier.display_comparison()
 
         # Example 3: Zoom into region
         print("\n🔍 Example 3: Zooming into region...")
@@ -79,7 +81,7 @@ def demonstrate_image_modifications():
         zoom_height = height // 2
 
         modifier.zoom_region(zoom_x, zoom_y, zoom_width, zoom_height, zoom_factor=1.5)
-        modifier.save_image("output_zoomed.jpg")
+        modifier.display_comparison()
 
         # Example 4: Chain multiple modifications
         print("\n🔗 Example 4: Chaining multiple modifications...")
@@ -92,16 +94,9 @@ def demonstrate_image_modifications():
             .zoom_region(zoom_x, zoom_y, zoom_width, zoom_height, 1.2)
         )
 
-        modifier.save_image("output_chained.jpg")
+        modifier.display_comparison()
 
-        # Display comparison (if matplotlib is available)
-        try:
-            print("\n📊 Displaying comparison...")
-            modifier.display_comparison()
-        except Exception as e:
-            print(f"Could not display comparison: {e}")
-
-        print("\n🎉 Demo completed! Check the output files in the current directory.")
+        print("\n🎉 Demo completed!")
 
     except Exception as e:
         print(f"❌ Error during demo: {e}")
@@ -166,30 +161,9 @@ modifier.adjust_luminosity(15).change_color_scheme('warm').zoom_region(50, 50, 3
         print(f"   {i:2d}. {scheme}")
 
 
-def create_sample_requirements():
-    """
-    Create a requirements.txt file for the dependencies.
-    """
-    requirements = """# Image Processing Dependencies
-opencv-python>=4.5.0
-Pillow>=8.0.0
-numpy>=1.19.0
-matplotlib>=3.3.0
-"""
-
-    with open("requirements.txt", "w") as f:
-        f.write(requirements)
-
-    print("📦 Created requirements.txt file")
-    print("Install dependencies with: pip install -r requirements.txt")
-
-
 if __name__ == "__main__":
     print("🚀 ImageModifier Demo")
     print("=" * 50)
-
-    # Create requirements file
-    create_sample_requirements()
 
     # Run the demonstration
     demonstrate_image_modifications()

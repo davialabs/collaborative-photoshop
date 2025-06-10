@@ -67,15 +67,21 @@ class ImageModifier:
         hsv = cv.cvtColor(self.current_cv_image, cv.COLOR_BGR2HSV)
         h, s, v = cv.split(hsv)
 
+        # Convert to float32 for calculations
+        v = v.astype(np.float32)
+
         # Adjust value (brightness) channel
         if percentage > 0:
             # Brighten
-            v = cv.add(v, np.ones(v.shape, dtype=v.dtype) * (percentage * 2.55))
+            v = cv.add(v, np.ones(v.shape, dtype=np.float32) * (percentage * 2.55))
         else:
             # Darken
             v = cv.subtract(
-                v, np.ones(v.shape, dtype=v.dtype) * (abs(percentage) * 2.55)
+                v, np.ones(v.shape, dtype=np.float32) * (abs(percentage) * 2.55)
             )
+
+        # Clip values to valid range and convert back to uint8
+        v = np.clip(v, 0, 255).astype(np.uint8)
 
         hsv_adjusted = cv.merge([h, s, v])
         self.current_cv_image = cv.cvtColor(hsv_adjusted, cv.COLOR_HSV2BGR)
