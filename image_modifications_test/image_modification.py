@@ -3,7 +3,6 @@ import numpy as np
 from PIL import Image, ImageEnhance
 import base64
 from io import BytesIO
-from typing import Dict, List, Optional
 
 
 def adjust_luminosity(base64_image: str, percentage: float) -> str:
