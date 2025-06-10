@@ -5,6 +5,7 @@ from agents import function_tool
 from agents import RunContextWrapper
 
 from openai_vivalehack.model import AgentContext
+from openai_vivalehack.utils import decode_image
 
 
 @function_tool
@@ -12,13 +13,19 @@ def adjust_luminosity_base64(
     ctx: RunContextWrapper[AgentContext], percentage: float
 ) -> str:
     """
-    Given an image as base64, adjust the luminosity of the image by a percentage (-100 to 100).
-    The new image is stored in the context.new_image_b64 field.
-    The only thing you need is the percentage, don't ask for the image.
+    Adjusts the luminosity of the image by a percentage (-100 to 100).
+    DO NOT ASK FOR THE IMAGE, only the percentage is needed. The image is provided as base64 in the context.image_b64 field.
+    The new image is stored in the context.modified_images_b64 field.
+
+    Args:
+        percentage (float): The percentage to adjust the luminosity by.
+
+    Returns:
+        str: A success message.
     """
-    print("adjusting luminosity")
+    print(f"Adjusting luminosity by {percentage}%")
     # Decode base64 to bytes
-    image_data = base64.b64decode(ctx.context.image_b64)
+    image_data = decode_image(ctx.context.image_b64)
     # Open image from bytes
     image = Image.open(BytesIO(image_data)).convert("RGB")
     # Calculate enhancement factor
@@ -33,16 +40,5 @@ def adjust_luminosity_base64(
     buffer.seek(0)
     # Encode back to base64
     modified_b64 = base64.b64encode(buffer.read()).decode("utf-8")
-    ctx.context.new_image_b64 = modified_b64
-    print("luminosity adjusted")
-    return f"Luminosity adjusted by {percentage}% for provided image."
-
-
-@function_tool
-def name_image(ctx: RunContextWrapper[AgentContext]) -> str:
-    """
-    Name the image.
-    You don't need the image, the image is provided as base64, in the context.new_image_b64 field.
-    """
-    print("naming image")
-    return f"Image named: {ctx.context.image_b64}"
+    ctx.context.modified_images_b64.append(modified_b64)
+    return f"Luminosity adjusted by {percentage}%."
