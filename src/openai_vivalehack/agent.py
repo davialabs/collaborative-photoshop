@@ -8,6 +8,7 @@ from openai_vivalehack.image_modifications import (
     go_to_image_index,
     next_image,
     previous_image,
+    adjust_contrast,
 )
 from openai_vivalehack.image_generator import generate_image, edit_image
 from openai_vivalehack.model import AgentContext
@@ -23,17 +24,24 @@ agent = Agent(
         previous_image,
         generate_image,
         edit_image,
+        adjust_contrast,
     ],
 )
 
 
 async def main():
-    agent_context = AgentContext(modified_images_b64=[], current_image_index=0)
+    with open(
+        "/Users/rubenillouz/project/openai-vivalehack/image_modifications_test/cat.png",
+        "rb",
+    ) as img_file:
+        image_b64 = base64.b64encode(img_file.read()).decode("utf-8")
+
+    agent_context = AgentContext(modified_images_b64=[image_b64], current_image_index=0)
 
     result = await Runner.run(
         starting_agent=agent,
         context=agent_context,
-        input="Create a new image of a cat",
+        input="Adjust the contrast of the image by 50%. Then make it more realistic.",
     )
 
     print(result.final_output)
