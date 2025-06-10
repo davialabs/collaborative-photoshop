@@ -349,3 +349,70 @@ def add_text(
     buffered = BytesIO()
     pil_image.save(buffered, format="PNG")
     return base64.b64encode(buffered.getvalue()).decode()
+
+
+def remove_background(base64_image: str, iterations: int = 5) -> str:
+    """
+    Remove the background from an image using OpenCV's GrabCut algorithm.
+
+    Args:
+        base64_image (str): Base64 encoded image data
+        iterations (int): Number of iterations for grabcut (default: 5)
+
+    Returns:
+        str: Base64 encoded image with transparent background
+    """
+    # Remove data URL prefix if present
+    if "base64," in base64_image:
+        base64_image = base64_image.split("base64,")[1]
+
+    # Decode base64 to image
+    image_data = base64.b64decode(base64_image)
+    pil_image = Image.open(BytesIO(image_data))
+    cv_image = cv.cvtColor(np.array(pil_image), cv.COLOR_RGB2BGR)
+
+    # Create a mask
+    mask = np.zeros(cv_image.shape[:2], np.uint8)
+
+    # Create temporary arrays for grabcut
+    bgd_model = np.zeros((1, 65), np.float64)
+    fgd_model = np.zeros((1, 65), np.float64)
+
+    # Define rectangle for grabcut (assuming object is in center)
+    height, width = cv_image.shape[:2]
+    rect = (width // 8, height // 8, width * 3 // 4, height * 3 // 4)
+
+    # Apply grabcut
+    cv.grabCut(
+        cv_image, mask, rect, bgd_model, fgd_model, iterations, cv.GC_INIT_WITH_RECT
+    )
+
+    # Create mask where sure and likely fg pixels are marked
+    mask2 = np.where((mask == 2) | (mask == 0), 0, 1).astype("uint8")
+
+    # Create alpha channel
+    alpha = mask2 * 255
+
+    # Convert to RGBA
+    rgba = cv.cvtColor(cv_image, cv.COLOR_BGR2BGRA)
+    rgba[:, :, 3] = alpha
+
+    # Convert back to base64
+    pil_image = Image.fromarray(cv.cvtColor(rgba, cv.COLOR_BGRA2RGBA))
+    buffered = BytesIO()
+    pil_image.save(buffered, format="PNG")
+    return base64.b64encode(buffered.getvalue()).decode()
+
+
+# Example usage:
+if __name__ == "__main__":
+    image_path = r"image_modifications_test\wallpaper.webp"
+
+    # get image and convert to base64
+    with open(image_path, "rb") as image_file:
+        base64_image = base64.b64encode(image_file.read()).decode("utf-8")
+
+    # Test background removal
+    print("\nTesting background removal on cat image...")
+    removed_bg = remove_background(base64_image)
+    display_image(removed_bg)
