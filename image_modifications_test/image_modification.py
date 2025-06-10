@@ -225,10 +225,25 @@ def change_color_scheme(base64_image: str, scheme: str) -> str:
     return base64.b64encode(buffered.getvalue()).decode()
 
 
+def display_image(base64_image: str):
+    """
+    Display an image from base64 encoded data.
+    """
+    image_data = base64.b64decode(base64_image)
+    pil_image = Image.open(BytesIO(image_data))
+    pil_image.show()
+
+
 # Example usage:
 if __name__ == "__main__":
+    image_path = r"image_modifications_test\kermit.jpg"
+
+    # get image and convert to base64
+    with open(image_path, "rb") as image_file:
+        base64_image = base64.b64encode(image_file.read()).decode("utf-8")
+
     # Example with base64 image
-    base64_image = "data:image/jpeg;base64,..."  # Your base64 image here
+    # base64_image = "data:image/jpeg;base64,..."  # Your base64 image here
 
     # Adjust luminosity
     brightened = adjust_luminosity(base64_image, 20)
@@ -244,3 +259,6 @@ if __name__ == "__main__":
         adjust_luminosity(zoom_region(base64_image, 100, 100, 200, 200, 1.5), 15),
         "warm",
     )
+
+    # display the image
+    display_image(result)
