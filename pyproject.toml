@@ -13,6 +13,8 @@ dependencies = [
     "openai-agents>=0.0.17",
     "opencv-python>=4.11.0.86",
     "pillow>=11.2.1",
+    "python-dotenv>=1.1.0",
+    "replicate>=1.0.7",
 ]
 
 [project.scripts]

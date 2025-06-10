@@ -3,6 +3,11 @@ import numpy as np
 from PIL import Image, ImageEnhance
 import base64
 from io import BytesIO
+import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 
 def adjust_luminosity(base64_image: str, percentage: float) -> str:
@@ -224,6 +229,169 @@ def change_color_scheme(base64_image: str, scheme: str) -> str:
     return base64.b64encode(buffered.getvalue()).decode()
 
 
+def blur_region(base64_image: str, region: str, blur_radius: int = 30) -> str:
+    """
+    Blur a specific region of a base64 encoded image.
+
+    Args:
+        base64_image (str): Base64 encoded image data
+        region (str): Region to blur. Options: 'top_left', 'top_right', 'bottom_left', 'bottom_right'
+        blur_radius (int): Radius of the Gaussian blur (default: 30)
+
+    Returns:
+        str: Base64 encoded modified image
+    """
+    if region not in ["top_left", "top_right", "bottom_left", "bottom_right"]:
+        raise ValueError(
+            "Region must be one of: 'top_left', 'top_right', 'bottom_left', 'bottom_right'"
+        )
+
+    # Remove data URL prefix if present
+    if "base64," in base64_image:
+        base64_image = base64_image.split("base64,")[1]
+
+    # Decode base64 to image
+    image_data = base64.b64decode(base64_image)
+    pil_image = Image.open(BytesIO(image_data))
+    cv_image = cv.cvtColor(np.array(pil_image), cv.COLOR_RGB2BGR)
+
+    # Get image dimensions
+    height, width = cv_image.shape[:2]
+    half_height = height // 2
+    half_width = width // 2
+
+    # Define region coordinates
+    regions = {
+        "top_left": (0, 0, half_width, half_height),
+        "top_right": (half_width, 0, width, half_height),
+        "bottom_left": (0, half_height, half_width, height),
+        "bottom_right": (half_width, half_height, width, height),
+    }
+
+    # Get coordinates for the specified region
+    x1, y1, x2, y2 = regions[region]
+
+    # Extract the region
+    region_to_blur = cv_image[y1:y2, x1:x2]
+
+    # Apply Gaussian blur
+    blurred_region = cv.GaussianBlur(
+        region_to_blur, (blur_radius * 2 + 1, blur_radius * 2 + 1), 0
+    )
+
+    # Replace the region in the original image
+    cv_image[y1:y2, x1:x2] = blurred_region
+
+    # Convert back to base64
+    pil_image = Image.fromarray(cv.cvtColor(cv_image, cv.COLOR_BGR2RGB))
+    buffered = BytesIO()
+    pil_image.save(buffered, format="PNG")
+    return base64.b64encode(buffered.getvalue()).decode()
+
+
+def adjust_contrast(base64_image: str, percentage: float) -> str:
+    """
+    Adjust the contrast of a base64 encoded image by a percentage.
+
+    Args:
+        base64_image (str): Base64 encoded image data (with or without data URL prefix)
+        percentage (float): Percentage to adjust contrast (-100 to 100)
+                          Positive values increase contrast, negative values decrease contrast
+
+    Returns:
+        str: Base64 encoded modified image
+    """
+    if not -100 <= percentage <= 100:
+        raise ValueError("Percentage must be between -100 and 100")
+
+    # Remove data URL prefix if present
+    if "base64," in base64_image:
+        base64_image = base64_image.split("base64,")[1]
+
+    # Decode base64 to image
+    image_data = base64.b64decode(base64_image)
+    pil_image = Image.open(BytesIO(image_data))
+
+    # Convert to OpenCV format
+    cv_image = cv.cvtColor(np.array(pil_image), cv.COLOR_RGB2BGR)
+
+    # Method 1: Using PIL ImageEnhance
+    enhancer = ImageEnhance.Contrast(pil_image)
+    factor = 1.0 + (percentage / 100.0)
+    factor = max(0.0, factor)  # Ensure factor is not negative
+    pil_image = enhancer.enhance(factor)
+
+    # Method 2: Using OpenCV
+    # Convert to LAB color space
+    lab = cv.cvtColor(cv_image, cv.COLOR_BGR2LAB)
+    l, a, b = cv.split(lab)
+
+    # Apply contrast adjustment to L channel
+    clahe = cv.createCLAHE(clipLimit=3.0, tileGridSize=(8, 8))
+    l = clahe.apply(l)
+
+    # Merge channels and convert back to BGR
+    lab = cv.merge([l, a, b])
+    cv_image = cv.cvtColor(lab, cv.COLOR_LAB2BGR)
+
+    # Convert back to base64
+    buffered = BytesIO()
+    pil_image.save(buffered, format="PNG")
+    return base64.b64encode(buffered.getvalue()).decode()
+
+
+def adjust_saturation(base64_image: str, percentage: float) -> str:
+    """
+    Adjust the saturation of a base64 encoded image by a percentage.
+
+    Args:
+        base64_image (str): Base64 encoded image data (with or without data URL prefix)
+        percentage (float): Percentage to adjust saturation (-100 to 100)
+                          Positive values increase saturation, negative values decrease saturation
+
+    Returns:
+        str: Base64 encoded modified image
+    """
+    if not -100 <= percentage <= 100:
+        raise ValueError("Percentage must be between -100 and 100")
+
+    # Remove data URL prefix if present
+    if "base64," in base64_image:
+        base64_image = base64_image.split("base64,")[1]
+
+    # Decode base64 to image
+    image_data = base64.b64decode(base64_image)
+    pil_image = Image.open(BytesIO(image_data))
+
+    # Convert to OpenCV format
+    cv_image = cv.cvtColor(np.array(pil_image), cv.COLOR_RGB2BGR)
+
+    # Method 1: Using PIL ImageEnhance
+    enhancer = ImageEnhance.Color(pil_image)
+    factor = 1.0 + (percentage / 100.0)
+    factor = max(0.0, factor)  # Ensure factor is not negative
+    pil_image = enhancer.enhance(factor)
+
+    # Method 2: Using OpenCV HSV
+    hsv = cv.cvtColor(cv_image, cv.COLOR_BGR2HSV)
+    h, s, v = cv.split(hsv)
+
+    # Adjust saturation
+    if percentage > 0:
+        s = cv.add(s, np.ones(s.shape, dtype=np.uint8) * (percentage * 2.55))
+    else:
+        s = cv.subtract(s, np.ones(s.shape, dtype=np.uint8) * (abs(percentage) * 2.55))
+
+    s = np.clip(s, 0, 255).astype(np.uint8)
+    hsv_adjusted = cv.merge([h, s, v])
+    cv_image = cv.cvtColor(hsv_adjusted, cv.COLOR_HSV2BGR)
+
+    # Convert back to base64
+    buffered = BytesIO()
+    pil_image.save(buffered, format="PNG")
+    return base64.b64encode(buffered.getvalue()).decode()
+
+
 def display_image(base64_image: str):
     """
     Display an image from base64 encoded data.
@@ -231,6 +399,84 @@ def display_image(base64_image: str):
     image_data = base64.b64decode(base64_image)
     pil_image = Image.open(BytesIO(image_data))
     pil_image.show()
+
+
+def add_text(
+    base64_image: str,
+    text: str,
+    position: str = "center",
+    font_scale: float = 1.0,
+    color: tuple = (0, 0, 0),
+    thickness: int = 2,
+) -> str:
+    """
+    Add text to a base64 encoded image at specified position.
+
+    Args:
+        base64_image (str): Base64 encoded image data
+        text (str): Text to add to the image
+        position (str): Position of the text. Options: 'center', 'top_left', 'top_right', 'bottom_left'
+        font_scale (float): Scale of the font (default: 1.0)
+        color (tuple): BGR color tuple (default: black (0, 0, 0))
+                      Common colors:
+                      - Black: (0, 0, 0)
+                      - White: (255, 255, 255)
+                      - Red: (0, 0, 255)
+                      - Green: (0, 255, 0)
+                      - Blue: (255, 0, 0)
+                      - Yellow: (0, 255, 255)
+                      - Purple: (255, 0, 255)
+                      - Cyan: (255, 255, 0)
+        thickness (int): Thickness of the text (default: 2)
+
+    Returns:
+        str: Base64 encoded modified image
+    """
+    if position not in ["center", "top_left", "top_right", "bottom_left"]:
+        raise ValueError(
+            "Position must be one of: 'center', 'top_left', 'top_right', 'bottom_left'"
+        )
+
+    # Remove data URL prefix if present
+    if "base64," in base64_image:
+        base64_image = base64_image.split("base64,")[1]
+
+    # Decode base64 to image
+    image_data = base64.b64decode(base64_image)
+    pil_image = Image.open(BytesIO(image_data))
+    cv_image = cv.cvtColor(np.array(pil_image), cv.COLOR_RGB2BGR)
+
+    # Get image dimensions
+    height, width = cv_image.shape[:2]
+
+    # Get text size
+    font = cv.FONT_HERSHEY_SIMPLEX
+    (text_width, text_height), baseline = cv.getTextSize(
+        text, font, font_scale, thickness
+    )
+
+    # Calculate position
+    if position == "center":
+        x = (width - text_width) // 2
+        y = (height + text_height) // 2
+    elif position == "top_left":
+        x = 10
+        y = text_height + 10
+    elif position == "top_right":
+        x = width - text_width - 10
+        y = text_height + 10
+    else:  # bottom_left
+        x = 10
+        y = height - 10
+
+    # Add text to image
+    cv.putText(cv_image, text, (x, y), font, font_scale, color, thickness)
+
+    # Convert back to base64
+    pil_image = Image.fromarray(cv.cvtColor(cv_image, cv.COLOR_BGR2RGB))
+    buffered = BytesIO()
+    pil_image.save(buffered, format="PNG")
+    return base64.b64encode(buffered.getvalue()).decode()
 
 
 # Example usage:
@@ -241,23 +487,30 @@ if __name__ == "__main__":
     with open(image_path, "rb") as image_file:
         base64_image = base64.b64encode(image_file.read()).decode("utf-8")
 
-    # Example with base64 image
-    # base64_image = "data:image/jpeg;base64,..."  # Your base64 image here
+    # Test adding text in different positions with different colors
+    print("\nTesting text addition to Kermit image...")
+    positions = ["center", "top_left", "top_right", "bottom_left"]
+    colors = {
+        "Black": (0, 0, 0),
+        "White": (255, 255, 255),
+        "Red": (0, 0, 255),
+        "Green": (0, 255, 0),
+        "Blue": (255, 0, 0),
+        "Yellow": (0, 255, 255),
+        "Purple": (255, 0, 255),
+        "Cyan": (255, 255, 0),
+    }
 
-    # Adjust luminosity
-    brightened = adjust_luminosity(base64_image, 20)
-
-    # Apply color scheme
-    sepia = change_color_scheme(base64_image, "sepia")
-
-    # Zoom region
-    zoomed = zoom_region(base64_image, 100, 100, 200, 200, 2.0)
-
-    # Chain operations (if needed)
-    result = change_color_scheme(
-        adjust_luminosity(zoom_region(base64_image, 100, 100, 200, 200, 1.5), 15),
-        "warm",
-    )
-
-    # display the image
-    display_image(result)
+    for pos in positions:
+        print(f"\nAdding text to {pos}...")
+        # Test each color for the current position
+        for color_name, color_value in colors.items():
+            print(f"Color: {color_name}")
+            text_image = add_text(
+                base64_image,
+                f"Kermit ({pos})",
+                position=pos,
+                font_scale=1.5,
+                color=color_value,
+            )
+            display_image(text_image)
