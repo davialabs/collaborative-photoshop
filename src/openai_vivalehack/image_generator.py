@@ -61,7 +61,6 @@ def edit_image(ctx: RunContextWrapper[AgentContext], prompt: str) -> str:
             image=image_file,
             prompt=prompt,
         )
-        print(f"Edit API result: {result}")
         image_base64 = result.data[0].b64_json
     except Exception as e:
         print(f"Error editing image: {e}")
@@ -70,7 +69,4 @@ def edit_image(ctx: RunContextWrapper[AgentContext], prompt: str) -> str:
     # Update context with the new image
     ctx.context.modified_images_b64.append(image_base64)
     ctx.context.current_image_index = len(ctx.context.modified_images_b64) - 1
-    print(
-        f"Image edited and added to context at index {ctx.context.current_image_index}"
-    )
     return f"Image edited with prompt: {prompt}"

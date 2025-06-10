@@ -28,12 +28,18 @@ agent = Agent(
 
 
 async def main():
-    agent_context = AgentContext(modified_images_b64=[], current_image_index=0)
+    with open(
+        "/Users/rubenillouz/project/openai-vivalehack/image_modifications_test/cat.png",
+        "rb",
+    ) as img_file:
+        image_b64 = base64.b64encode(img_file.read()).decode("utf-8")
+
+    agent_context = AgentContext(modified_images_b64=[image_b64], current_image_index=0)
 
     result = await Runner.run(
         starting_agent=agent,
         context=agent_context,
-        input="Create a new image of a cat",
+        input="Change the color scheme to a warm color scheme.",
     )
 
     print(result.final_output)

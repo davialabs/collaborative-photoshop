@@ -69,7 +69,6 @@ def change_color_scheme(ctx: RunContextWrapper[AgentContext], scheme: str) -> st
         str: Confirmation message with the applied color scheme
     """
     print(f"Starting color scheme application with scheme: {scheme}")
-    print(f"Context image_b64 length: {len(ctx.context.image_b64)}")
     current_image_b64 = ctx.context.modified_images_b64[ctx.context.current_image_index]
 
     # Remove data URL prefix if present
@@ -180,24 +179,6 @@ def change_color_scheme(ctx: RunContextWrapper[AgentContext], scheme: str) -> st
     except Exception as e:
         print(f"Error occurred: {str(e)}")
         raise
-
-
-@function_tool
-def go_to_image(ctx: RunContextWrapper[AgentContext], index: int) -> str:
-    """
-    Navigate to a specific image in the modified_images_b64 list by index.
-
-    Args:
-        index (int): The index of the image to navigate to.
-
-    Returns:
-        str: Confirmation message with the new current image index.
-    """
-    if 0 <= index < len(ctx.context.modified_images_b64):
-        ctx.context.current_image_index = index
-        return f"Navigated to image at index {index}."
-    else:
-        return f"Invalid index: {index}. There are {len(ctx.context.modified_images_b64)} images."
 
 
 @function_tool
