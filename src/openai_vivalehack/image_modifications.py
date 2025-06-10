@@ -222,3 +222,56 @@ def go_to_image_index(ctx: RunContextWrapper[AgentContext], index: int) -> str:
         return f"Navigated to image at index {index}."
     else:
         return f"Invalid index: {index}. There are {len(ctx.context.modified_images_b64)} images."
+
+
+@function_tool
+def adjust_contrast(ctx: RunContextWrapper[AgentContext], percentage: float) -> str:
+    """
+    Adjust the contrast of a base64 encoded image by a percentage.
+
+    Args:
+        base64_image (str): Base64 encoded image data (with or without data URL prefix)
+        percentage (float): Percentage to adjust contrast (-100 to 100)
+                          Positive values increase contrast, negative values decrease contrast
+
+    Returns:
+        str: Base64 encoded modified image
+    """
+    current_image_b64 = ctx.context.modified_images_b64[ctx.context.current_image_index]
+
+    if not -100 <= percentage <= 100:
+        raise ValueError("Percentage must be between -100 and 100")
+
+    # Decode base64 to image
+    image_data = decode_image(current_image_b64)
+    pil_image = Image.open(BytesIO(image_data))
+
+    # Convert to OpenCV format
+    cv_image = cv.cvtColor(np.array(pil_image), cv.COLOR_RGB2BGR)
+
+    # Method 1: Using PIL ImageEnhance
+    enhancer = ImageEnhance.Contrast(pil_image)
+    factor = 1.0 + (percentage / 100.0)
+    factor = max(0.0, factor)  # Ensure factor is not negative
+    pil_image = enhancer.enhance(factor)
+
+    # Method 2: Using OpenCV
+    # Convert to LAB color space
+    lab = cv.cvtColor(cv_image, cv.COLOR_BGR2LAB)
+    l, a, b = cv.split(lab)
+
+    # Apply contrast adjustment to L channel
+    clahe = cv.createCLAHE(clipLimit=3.0, tileGridSize=(8, 8))
+    l = clahe.apply(l)
+
+    # Merge channels and convert back to BGR
+    lab = cv.merge([l, a, b])
+    cv_image = cv.cvtColor(lab, cv.COLOR_LAB2BGR)
+
+    # Convert back to base64
+    buffered = BytesIO()
+    pil_image.save(buffered, format="PNG")
+    modified_b64 = base64.b64encode(buffered.getvalue()).decode()
+    ctx.context.modified_images_b64.append(modified_b64)
+    ctx.context.current_image_index = len(ctx.context.modified_images_b64) - 1
+    return f"Contrast adjusted by {percentage}%."

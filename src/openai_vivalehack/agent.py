@@ -8,6 +8,7 @@ from openai_vivalehack.image_modifications import (
     go_to_image_index,
     next_image,
     previous_image,
+    adjust_contrast,
 )
 from openai_vivalehack.image_generator import generate_image, edit_image
 from openai_vivalehack.model import AgentContext
@@ -23,6 +24,7 @@ agent = Agent(
         previous_image,
         generate_image,
         edit_image,
+        adjust_contrast,
     ],
 )
 
@@ -39,7 +41,7 @@ async def main():
     result = await Runner.run(
         starting_agent=agent,
         context=agent_context,
-        input="Change the color scheme to a warm color scheme.",
+        input="Adjust the contrast of the image by 50%. Then make it more realistic.",
     )
 
     print(result.final_output)
