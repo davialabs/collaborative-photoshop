@@ -162,33 +162,3 @@ def display_image(base64_image: str):
     image_data = base64.b64decode(base64_image)
     pil_image = Image.open(BytesIO(image_data))
     pil_image.show()
-
-
-# Example usage:
-if __name__ == "__main__":
-    image_path = r"image_modifications_test\kermit.jpg"
-
-    # get image and convert to base64
-    with open(image_path, "rb") as image_file:
-        base64_image = base64.b64encode(image_file.read()).decode("utf-8")
-
-    # Example with base64 image
-    # base64_image = "data:image/jpeg;base64,..."  # Your base64 image here
-
-    # Adjust luminosity
-    brightened = adjust_luminosity(base64_image, 20)
-
-    # Apply color scheme
-    sepia = change_color_scheme(base64_image, "sepia")
-
-    # Zoom region
-    zoomed = zoom_region(base64_image, 100, 100, 200, 200, 2.0)
-
-    # Chain operations (if needed)
-    result = change_color_scheme(
-        adjust_luminosity(zoom_region(base64_image, 100, 100, 200, 200, 1.5), 15),
-        "warm",
-    )
-
-    # display the image
-    display_image(result)
