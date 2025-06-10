@@ -11,6 +11,7 @@ dependencies = [
     "davia>=0.1.13",
     "openai-agents>=0.0.17",
     "opencv-python>=4.11.0.86",
+    "pillow>=11.2.1",
 ]
 
 [project.scripts]
