@@ -162,3 +162,190 @@ def display_image(base64_image: str):
     image_data = base64.b64decode(base64_image)
     pil_image = Image.open(BytesIO(image_data))
     pil_image.show()
+
+
+def adjust_contrast(base64_image: str, percentage: float) -> str:
+    """
+    Adjust the contrast of a base64 encoded image by a percentage.
+
+    Args:
+        base64_image (str): Base64 encoded image data (with or without data URL prefix)
+        percentage (float): Percentage to adjust contrast (-100 to 100)
+                          Positive values increase contrast, negative values decrease contrast
+
+    Returns:
+        str: Base64 encoded modified image
+    """
+    if not -100 <= percentage <= 100:
+        raise ValueError("Percentage must be between -100 and 100")
+
+    # Remove data URL prefix if present
+    if "base64," in base64_image:
+        base64_image = base64_image.split("base64,")[1]
+
+    # Decode base64 to image
+    image_data = base64.b64decode(base64_image)
+    pil_image = Image.open(BytesIO(image_data))
+
+    # Convert to OpenCV format
+    cv_image = cv.cvtColor(np.array(pil_image), cv.COLOR_RGB2BGR)
+
+    # Method 1: Using PIL ImageEnhance
+    enhancer = ImageEnhance.Contrast(pil_image)
+    factor = 1.0 + (percentage / 100.0)
+    factor = max(0.0, factor)  # Ensure factor is not negative
+    pil_image = enhancer.enhance(factor)
+
+    # Method 2: Using OpenCV
+    # Convert to LAB color space
+    lab = cv.cvtColor(cv_image, cv.COLOR_BGR2LAB)
+    l, a, b = cv.split(lab)
+
+    # Apply contrast adjustment to L channel
+    clahe = cv.createCLAHE(clipLimit=3.0, tileGridSize=(8, 8))
+    l = clahe.apply(l)
+
+    # Merge channels and convert back to BGR
+    lab = cv.merge([l, a, b])
+    cv_image = cv.cvtColor(lab, cv.COLOR_LAB2BGR)
+
+    # Convert back to base64
+    buffered = BytesIO()
+    pil_image.save(buffered, format="PNG")
+    return base64.b64encode(buffered.getvalue()).decode()
+
+
+def adjust_saturation(base64_image: str, percentage: float) -> str:
+    """
+    Adjust the saturation of a base64 encoded image by a percentage.
+
+    Args:
+        base64_image (str): Base64 encoded image data (with or without data URL prefix)
+        percentage (float): Percentage to adjust saturation (-100 to 100)
+                          Positive values increase saturation, negative values decrease saturation
+
+    Returns:
+        str: Base64 encoded modified image
+    """
+    if not -100 <= percentage <= 100:
+        raise ValueError("Percentage must be between -100 and 100")
+
+    # Remove data URL prefix if present
+    if "base64," in base64_image:
+        base64_image = base64_image.split("base64,")[1]
+
+    # Decode base64 to image
+    image_data = base64.b64decode(base64_image)
+    pil_image = Image.open(BytesIO(image_data))
+
+    # Convert to OpenCV format
+    cv_image = cv.cvtColor(np.array(pil_image), cv.COLOR_RGB2BGR)
+
+    # Method 1: Using PIL ImageEnhance
+    enhancer = ImageEnhance.Color(pil_image)
+    factor = 1.0 + (percentage / 100.0)
+    factor = max(0.0, factor)  # Ensure factor is not negative
+    pil_image = enhancer.enhance(factor)
+
+    # Method 2: Using OpenCV HSV
+    hsv = cv.cvtColor(cv_image, cv.COLOR_BGR2HSV)
+    h, s, v = cv.split(hsv)
+
+    # Convert to float32 for calculations
+    s = s.astype(np.float32)
+
+    # Adjust saturation
+    if percentage > 0:
+        s = s + (percentage * 2.55)
+    else:
+        s = s - (abs(percentage) * 2.55)
+
+    # Clip values and convert back to uint8
+    s = np.clip(s, 0, 255).astype(np.uint8)
+
+    # Merge channels and convert back to BGR
+    hsv_adjusted = cv.merge([h, s, v])
+    cv_image = cv.cvtColor(hsv_adjusted, cv.COLOR_HSV2BGR)
+
+    # Convert back to base64
+    buffered = BytesIO()
+    pil_image.save(buffered, format="PNG")
+    return base64.b64encode(buffered.getvalue()).decode()
+
+
+def add_text(
+    base64_image: str,
+    text: str,
+    position: str = "center",
+    font_scale: float = 1.0,
+    color: tuple = (0, 0, 0),
+    thickness: int = 2,
+) -> str:
+    """
+    Add text to a base64 encoded image at specified position.
+
+    Args:
+        base64_image (str): Base64 encoded image data
+        text (str): Text to add to the image
+        position (str): Position of the text. Options: 'center', 'top_left', 'top_right', 'bottom_left'
+        font_scale (float): Scale of the font (default: 1.0)
+        color (tuple): BGR color tuple (default: black (0, 0, 0))
+                      Common colors:
+                      - Black: (0, 0, 0)
+                      - White: (255, 255, 255)
+                      - Red: (0, 0, 255)
+                      - Green: (0, 255, 0)
+                      - Blue: (255, 0, 0)
+                      - Yellow: (0, 255, 255)
+                      - Purple: (255, 0, 255)
+                      - Cyan: (255, 255, 0)
+        thickness (int): Thickness of the text (default: 2)
+
+    Returns:
+        str: Base64 encoded modified image
+    """
+    if position not in ["center", "top_left", "top_right", "bottom_left"]:
+        raise ValueError(
+            "Position must be one of: 'center', 'top_left', 'top_right', 'bottom_left'"
+        )
+
+    # Remove data URL prefix if present
+    if "base64," in base64_image:
+        base64_image = base64_image.split("base64,")[1]
+
+    # Decode base64 to image
+    image_data = base64.b64decode(base64_image)
+    pil_image = Image.open(BytesIO(image_data))
+    cv_image = cv.cvtColor(np.array(pil_image), cv.COLOR_RGB2BGR)
+
+    # Get image dimensions
+    height, width = cv_image.shape[:2]
+
+    # Get text size
+    font = cv.FONT_HERSHEY_SIMPLEX
+    (text_width, text_height), baseline = cv.getTextSize(
+        text, font, font_scale, thickness
+    )
+
+    # Calculate position
+    if position == "center":
+        x = (width - text_width) // 2
+        y = (height + text_height) // 2
+    elif position == "top_left":
+        x = 10
+        y = text_height + 10
+    elif position == "top_right":
+        x = width - text_width - 10
+        y = text_height + 10
+    else:  # bottom_left
+        x = 10
+        y = height - 10
+
+    # Add text to image
+    cv.putText(cv_image, text, (x, y), font, font_scale, color, thickness)
+
+    # Convert back to base64
+    pil_image = Image.fromarray(cv.cvtColor(cv_image, cv.COLOR_BGR2RGB))
+    buffered = BytesIO()
+    pil_image.save(buffered, format="PNG")
+    return base64.b64encode(buffered.getvalue()).decode()
