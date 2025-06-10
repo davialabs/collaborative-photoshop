@@ -9,6 +9,7 @@ from openai_vivalehack.image_modifications import (
     next_image,
     previous_image,
     adjust_contrast,
+    remove_background,
 )
 from openai_vivalehack.image_generator import generate_image, edit_image
 from openai_vivalehack.model import AgentContext
@@ -25,6 +26,7 @@ agent = Agent(
         generate_image,
         edit_image,
         adjust_contrast,
+        remove_background,
     ],
 )
 
@@ -41,7 +43,7 @@ async def main():
     result = await Runner.run(
         starting_agent=agent,
         context=agent_context,
-        input="Adjust the contrast of the image by 50%. Then make it more realistic.",
+        input="Remove the background of the image. Then adjust the contrast of the image by 50%. Then make it more realistic.",
     )
 
     print(result.final_output)

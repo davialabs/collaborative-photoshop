@@ -276,3 +276,58 @@ def adjust_contrast(ctx: RunContextWrapper[AgentContext], percentage: float) -> 
     ctx.context.modified_images_b64.append(modified_b64)
     ctx.context.current_image_index = len(ctx.context.modified_images_b64) - 1
     return f"Contrast adjusted by {percentage}%."
+
+
+@function_tool
+def remove_background(ctx: RunContextWrapper[AgentContext], iterations: int = 5) -> str:
+    """
+    Remove the background from an image using OpenCV's GrabCut algorithm.
+
+    Args:
+        base64_image (str): Base64 encoded image data
+        iterations (int): Number of iterations for grabcut (default: 5)
+
+    Returns:
+        str: Base64 encoded image with transparent background
+    """
+    current_image_b64 = ctx.context.modified_images_b64[ctx.context.current_image_index]
+
+    # Decode base64 to image
+    image_data = decode_image(current_image_b64)
+    pil_image = Image.open(BytesIO(image_data))
+    cv_image = cv.cvtColor(np.array(pil_image), cv.COLOR_RGB2BGR)
+
+    # Create a mask
+    mask = np.zeros(cv_image.shape[:2], np.uint8)
+
+    # Create temporary arrays for grabcut
+    bgd_model = np.zeros((1, 65), np.float64)
+    fgd_model = np.zeros((1, 65), np.float64)
+
+    # Define rectangle for grabcut (assuming object is in center)
+    height, width = cv_image.shape[:2]
+    rect = (width // 8, height // 8, width * 3 // 4, height * 3 // 4)
+
+    # Apply grabcut
+    cv.grabCut(
+        cv_image, mask, rect, bgd_model, fgd_model, iterations, cv.GC_INIT_WITH_RECT
+    )
+
+    # Create mask where sure and likely fg pixels are marked
+    mask2 = np.where((mask == 2) | (mask == 0), 0, 1).astype("uint8")
+
+    # Create alpha channel
+    alpha = mask2 * 255
+
+    # Convert to RGBA
+    rgba = cv.cvtColor(cv_image, cv.COLOR_BGR2BGRA)
+    rgba[:, :, 3] = alpha
+
+    # Convert back to base64
+    pil_image = Image.fromarray(cv.cvtColor(rgba, cv.COLOR_BGRA2RGBA))
+    buffered = BytesIO()
+    pil_image.save(buffered, format="PNG")
+    modified_b64 = base64.b64encode(buffered.getvalue()).decode()
+    ctx.context.modified_images_b64.append(modified_b64)
+    ctx.context.current_image_index = len(ctx.context.modified_images_b64) - 1
+    return f"Background removed from image."
