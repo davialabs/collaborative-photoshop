@@ -3,6 +3,8 @@ import base64
 from io import BytesIO
 from agents import function_tool
 from agents import RunContextWrapper
+import cv2 as cv
+import numpy as np
 
 from openai_vivalehack.model import AgentContext
 from openai_vivalehack.utils import decode_image
@@ -15,6 +17,7 @@ def adjust_luminosity_base64(
     """
     Adjusts the luminosity of the image by a percentage (-100 to 100).
     DO NOT ASK FOR THE IMAGE, only the percentage is needed. The image is provided as base64 in the context.image_b64 field.
+    THIS FUNCTION DOES NOT NEED THE IMAGE, ONLY THE PERCENTAGE IS A PARAMETER.
     The new image is stored in the context.modified_images_b64 field.
 
     Args:
@@ -24,8 +27,9 @@ def adjust_luminosity_base64(
         str: A success message.
     """
     print(f"Adjusting luminosity by {percentage}%")
+    current_image_b64 = ctx.context.modified_images_b64[ctx.context.current_image_index]
     # Decode base64 to bytes
-    image_data = decode_image(ctx.context.image_b64)
+    image_data = decode_image(current_image_b64)
     # Open image from bytes
     image = Image.open(BytesIO(image_data)).convert("RGB")
     # Calculate enhancement factor
@@ -41,4 +45,199 @@ def adjust_luminosity_base64(
     # Encode back to base64
     modified_b64 = base64.b64encode(buffer.read()).decode("utf-8")
     ctx.context.modified_images_b64.append(modified_b64)
+    ctx.context.current_image_index = len(ctx.context.modified_images_b64) - 1
     return f"Luminosity adjusted by {percentage}%."
+
+
+@function_tool
+def change_color_scheme(ctx: RunContextWrapper[AgentContext], scheme: str) -> str:
+    """
+    Apply color scheme transformation.
+    The image is already available in the context and will be automatically processed.
+    You don't need to ask for the image, it is already in the context.
+    Just specify the color scheme to apply.
+    THIS FUNCTION DOES NOT NEED THE IMAGE, ONLY THE SCHEME IS A PARAMETER.
+
+
+    Args:
+        scheme (str): Color scheme to apply. Options:
+                     'grayscale', 'sepia', 'vintage', 'cool', 'warm',
+                     'high_contrast', 'negative', 'enhance_red',
+                     'enhance_green', 'enhance_blue'
+
+    Returns:
+        str: Confirmation message with the applied color scheme
+    """
+    print(f"Starting color scheme application with scheme: {scheme}")
+    print(f"Context image_b64 length: {len(ctx.context.image_b64)}")
+    current_image_b64 = ctx.context.modified_images_b64[ctx.context.current_image_index]
+
+    # Remove data URL prefix if present
+    if "base64," in current_image_b64:
+        print("Found base64 prefix, removing it")
+        base64_image = current_image_b64.split("base64,")[1]
+    else:
+        print("No base64 prefix found, using image as is")
+        base64_image = current_image_b64
+
+    try:
+        # Decode base64 to image
+        print("Decoding base64 image")
+        image_data = base64.b64decode(base64_image)
+        print(f"Decoded image size: {len(image_data)} bytes")
+
+        pil_image = Image.open(BytesIO(image_data))
+        print(f"PIL Image size: {pil_image.size}, mode: {pil_image.mode}")
+
+        cv_image = cv.cvtColor(np.array(pil_image), cv.COLOR_RGB2BGR)
+        print(f"OpenCV image shape: {cv_image.shape}")
+
+        scheme = scheme.lower()
+        print(f"Processing scheme: {scheme}")
+
+        if scheme == "grayscale":
+            print("Applying grayscale transformation")
+            cv_image = cv.cvtColor(cv_image, cv.COLOR_BGR2GRAY)
+            cv_image = cv.cvtColor(cv_image, cv.COLOR_GRAY2BGR)
+            pil_image = pil_image.convert("L").convert("RGB")
+
+        elif scheme == "sepia":
+            print("Applying sepia transformation")
+            sepia_filter = np.array(
+                [[0.272, 0.534, 0.131], [0.349, 0.686, 0.168], [0.393, 0.769, 0.189]]
+            )
+            cv_image = cv.transform(cv_image, sepia_filter)
+            cv_image = np.clip(cv_image, 0, 255).astype(np.uint8)
+
+        elif scheme == "vintage":
+            print("Applying vintage transformation")
+            hsv = cv.cvtColor(cv_image, cv.COLOR_BGR2HSV)
+            hsv[:, :, 1] = hsv[:, :, 1] * 0.6
+            cv_image = cv.cvtColor(hsv, cv.COLOR_HSV2BGR)
+            sepia_filter = np.array([[0.8, 0.6, 0.4], [0.9, 0.7, 0.5], [0.4, 0.3, 0.2]])
+            cv_image = cv.transform(cv_image, sepia_filter)
+            cv_image = np.clip(cv_image, 0, 255).astype(np.uint8)
+
+        elif scheme == "cool":
+            print("Applying cool transformation")
+            b, g, r = cv.split(cv_image)
+            b = cv.add(b, 30)
+            r = cv.subtract(r, 15)
+            cv_image = cv.merge([b, g, r])
+
+        elif scheme == "warm":
+            print("Applying warm transformation")
+            b, g, r = cv.split(cv_image)
+            r = cv.add(r, 30)
+            g = cv.add(g, 15)
+            b = cv.subtract(b, 20)
+            cv_image = cv.merge([b, g, r])
+
+        elif scheme == "high_contrast":
+            print("Applying high contrast transformation")
+            enhancer = ImageEnhance.Contrast(pil_image)
+            pil_image = enhancer.enhance(2.0)
+            cv_image = cv.cvtColor(np.array(pil_image), cv.COLOR_RGB2BGR)
+
+        elif scheme == "negative":
+            print("Applying negative transformation")
+            cv_image = 255 - cv_image
+
+        elif scheme == "enhance_red":
+            print("Applying red enhancement")
+            b, g, r = cv.split(cv_image)
+            r = cv.multiply(r, 1.3)
+            cv_image = cv.merge([b, g, r])
+
+        elif scheme == "enhance_green":
+            print("Applying green enhancement")
+            b, g, r = cv.split(cv_image)
+            g = cv.multiply(g, 1.3)
+            cv_image = cv.merge([b, g, r])
+
+        elif scheme == "enhance_blue":
+            print("Applying blue enhancement")
+            b, g, r = cv.split(cv_image)
+            b = cv.multiply(b, 1.3)
+            cv_image = cv.merge([b, g, r])
+
+        else:
+            raise ValueError(f"Unknown color scheme: {scheme}")
+
+        print("Converting back to base64")
+        # Convert back to base64
+        pil_image = Image.fromarray(cv.cvtColor(cv_image, cv.COLOR_BGR2RGB))
+        buffered = BytesIO()
+        pil_image.save(buffered, format="PNG")
+
+        modified_b64 = base64.b64encode(buffered.getvalue()).decode()
+        ctx.context.modified_images_b64.append(modified_b64)
+        ctx.context.current_image_index = len(ctx.context.modified_images_b64) - 1
+        print(f"Final base64 length: {len(modified_b64)}")
+        print(f"Color scheme {scheme} applied to image.")
+        return f"Color scheme {scheme} applied to image."
+
+    except Exception as e:
+        print(f"Error occurred: {str(e)}")
+        raise
+
+
+@function_tool
+def go_to_image(ctx: RunContextWrapper[AgentContext], index: int) -> str:
+    """
+    Navigate to a specific image in the modified_images_b64 list by index.
+
+    Args:
+        index (int): The index of the image to navigate to.
+
+    Returns:
+        str: Confirmation message with the new current image index.
+    """
+    if 0 <= index < len(ctx.context.modified_images_b64):
+        ctx.context.current_image_index = index
+        return f"Navigated to image at index {index}."
+    else:
+        return f"Invalid index: {index}. There are {len(ctx.context.modified_images_b64)} images."
+
+
+@function_tool
+def next_image(ctx: RunContextWrapper[AgentContext]) -> str:
+    """
+    Navigate to the next image in the modified_images_b64 list.
+
+    Returns:
+        str: Confirmation message with the new current image index, or a message if already at the last image.
+    """
+    if ctx.context.current_image_index < len(ctx.context.modified_images_b64) - 1:
+        ctx.context.current_image_index += 1
+        return f"Moved to next image at index {ctx.context.current_image_index}."
+    else:
+        return "Already at the last image."
+
+
+@function_tool
+def previous_image(ctx: RunContextWrapper[AgentContext]) -> str:
+    """
+    Navigate to the previous image in the modified_images_b64 list.
+
+    Returns:
+        str: Confirmation message with the new current image index, or a message if already at the first image.
+    """
+    if ctx.context.current_image_index > 0:
+        ctx.context.current_image_index -= 1
+        return f"Moved to previous image at index {ctx.context.current_image_index}."
+    else:
+        return "Already at the first image."
+
+
+@function_tool
+def go_to_image_index(ctx: RunContextWrapper[AgentContext], index: int) -> str:
+    """
+    Navigate to a specific image in the modified_images_b64 list by index.
+    """
+    print(f"Navigating to image at index {index}")
+    if 0 <= index < len(ctx.context.modified_images_b64):
+        ctx.context.current_image_index = index
+        return f"Navigated to image at index {index}."
+    else:
+        return f"Invalid index: {index}. There are {len(ctx.context.modified_images_b64)} images."
