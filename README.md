@@ -60,7 +60,7 @@ Both endpoints support:
 1. **Run the app:**
 
    ```bash
-   python src/openai_vivalehack/app.py
+   python src/collaborative-photoshop/app.py
    ```
 
    This will open Davia in your browser.

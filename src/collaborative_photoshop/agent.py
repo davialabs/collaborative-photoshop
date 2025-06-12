@@ -2,7 +2,7 @@ import asyncio
 import base64
 
 from agents import Agent, Runner
-from openai_vivalehack.image_modifications import (
+from collaborative_photoshop.image_modifications import (
     adjust_luminosity_base64,
     change_color_scheme,
     go_to_image_index,
@@ -11,8 +11,8 @@ from openai_vivalehack.image_modifications import (
     adjust_contrast,
     remove_background,
 )
-from openai_vivalehack.image_generator import generate_image, edit_image
-from openai_vivalehack.model import AgentContext
+from collaborative_photoshop.image_generator import generate_image, edit_image
+from collaborative_photoshop.model import AgentContext
 
 
 agent = Agent(

@@ -1,7 +1,7 @@
 from agents import function_tool
 from agents import RunContextWrapper
 
-from openai_vivalehack.model import AgentContext
+from collaborative_photoshop.model import AgentContext
 
 import base64
 from openai import OpenAI

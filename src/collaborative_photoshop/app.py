@@ -9,9 +9,9 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import Response
 
-from openai_vivalehack.agent import agent
-from openai_vivalehack.model import AgentContext
-from openai_vivalehack.utils import encode_image
+from collaborative_photoshop.agent import agent
+from collaborative_photoshop.model import AgentContext
+from collaborative_photoshop.utils import encode_image
 
 
 class LimitUploadSizeMiddleware(BaseHTTPMiddleware):

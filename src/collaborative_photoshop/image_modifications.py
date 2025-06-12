@@ -6,8 +6,8 @@ from agents import RunContextWrapper
 import cv2 as cv
 import numpy as np
 
-from openai_vivalehack.model import AgentContext
-from openai_vivalehack.utils import decode_image
+from collaborative_photoshop.model import AgentContext
+from collaborative_photoshop.utils import decode_image
 
 
 @function_tool

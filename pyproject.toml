@@ -18,7 +18,7 @@ dependencies = [
 ]
 
 [project.scripts]
-openai-vivalehack = "openai_vivalehack:main"
+openai-vivalehack = "collaborative-photoshop.app:main"
 
 [build-system]
 requires = ["hatchling"]
