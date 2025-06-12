@@ -1,5 +1,5 @@
 [project]
-name = "openai-vivalehack"
+name = "collaborative-photoshop"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
@@ -18,7 +18,7 @@ dependencies = [
 ]
 
 [project.scripts]
-openai-vivalehack = "collaborative-photoshop.app:main"
+collaborative-photoshop = "collaborative_photoshop.app:main"
 
 [build-system]
 requires = ["hatchling"]
