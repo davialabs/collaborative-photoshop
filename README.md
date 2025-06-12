@@ -68,10 +68,21 @@ Both endpoints support:
 2. **Prompt the interface you like:**
    - Once Davia is open, simply describe or prompt the interface or workflow you want.
    - For example:
-     - "I want a collaborative whiteboard with real-time image preview."
-     - "Add a chat sidebar for team comments."
-     - "Enable drag-and-drop image upload."
-   - Davia will help you generate the code or design for your desired interface.
+     - "Build a web app with a layout and design inspired by an AI-powered Photoshop.
+
+Functionality (Audio-only):
+• On the left panel:
+• Let users upload or record an audio file
+• While recording, show a live waveform or animation to indicate that recording is active
+• On the right panel:
+• Display the image corresponding to current_image_index from the images list (shown large)
+• Show the transcription or result from the audio processing
+
+Requirements:
+• The app must clearly call and reflect the behavior of the process_audio endpoint.
+• The design should resemble an AI-enhanced Photoshop-style editor, with intuitive panels and interactive feedback."
+
+- Davia will help you generate the code or design for your desired interface.
 
 ## 🎯 Example Usage
 
