@@ -65,22 +65,27 @@ Both endpoints support:
 
    This will open Davia in your browser.
 
-2. **Prompt the interface you like:**
-   - Once Davia is open, simply describe or prompt the interface or workflow you want.
-   - For example:
-     - "Build a web app with a layout and design inspired by an AI-powered Photoshop.
+2. **Create Your Interface:**
 
-Functionality (Audio-only):
-• On the left panel:
-• Let users upload or record an audio file
-• While recording, show a live waveform or animation to indicate that recording is active
-• On the right panel:
-• Display the image corresponding to current_image_index from the images list (shown large)
-• Show the transcription or result from the audio processing
+   - Once Davia is running, you can describe your desired interface using natural language
+   - Example prompt:
 
-Requirements:
-• The app must clearly call and reflect the behavior of the process_audio endpoint.
-• The design should resemble an AI-enhanced Photoshop-style editor, with intuitive panels and interactive feedback."
+     ```
+     Create an AI-powered image editor interface with:
+
+     Left Panel:
+     - Audio input section with upload/record functionality
+     - Live waveform visualization during recording
+
+     Right Panel:
+     - Large image preview showing the current image
+     - Real-time transcription display
+
+     Design Requirements:
+     - Photoshop-inspired layout with intuitive controls
+     - Seamless integration with process_audio endpoint
+     - Interactive feedback for user actions
+     ```
 
 - Davia will help you generate the code or design for your desired interface.
 
