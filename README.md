@@ -1,5 +1,7 @@
 # Real-Time Collaborative Photoshop
 
+**🌐 The app is available online:** [https://sonic-canvas-davia.vercel.app/](https://sonic-canvas-davia.vercel.app/)
+
 A real-time collaborative image editing platform powered by AI, enabling multiple users to modify and enhance images simultaneously through natural language commands or voice instructions.
 
 ## 🎨 Features
