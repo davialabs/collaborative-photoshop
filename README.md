@@ -1,4 +1,4 @@
-# OpenAI VivaLeHack
+# Real-Time Collaborative Photoshop
 
 A real-time collaborative image editing platform powered by AI, enabling multiple users to modify and enhance images simultaneously through natural language commands or voice instructions.
 
@@ -7,7 +7,7 @@ A real-time collaborative image editing platform powered by AI, enabling multipl
 - **Natural Language Image Editing**: Transform your images using simple text commands
 - **Voice-Controlled Editing**: Speak your editing instructions naturally
 - **Real-time Collaboration**: Multiple users can work on the same image simultaneously
-- **Smart Image Processing**: Powered by OpenAI's advanced AI models
+- **Smart Image Processing**: Powered by advanced AI models
 
 ### Available Image Modifications
 
@@ -54,6 +54,24 @@ Both endpoints support:
    ```bash
    export OPENAI_API_KEY="your-api-key"
    ```
+
+## 🚦 Getting Started
+
+1. **Run the app:**
+
+   ```bash
+   python src/openai_vivalehack/app.py
+   ```
+
+   This will open Davia in your browser.
+
+2. **Prompt the interface you like:**
+   - Once Davia is open, simply describe or prompt the interface or workflow you want.
+   - For example:
+     - "I want a collaborative whiteboard with real-time image preview."
+     - "Add a chat sidebar for team comments."
+     - "Enable drag-and-drop image upload."
+   - Davia will help you generate the code or design for your desired interface.
 
 ## 🎯 Example Usage
 
