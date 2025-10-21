@@ -10,6 +10,7 @@ from collaborative_photoshop.image_modifications import (
     previous_image,
     adjust_contrast,
     remove_background,
+    apply_artistic_style,
 )
 from collaborative_photoshop.image_generator import generate_image, edit_image
 from collaborative_photoshop.model import AgentContext
@@ -27,6 +28,7 @@ agent = Agent(
         edit_image,
         adjust_contrast,
         remove_background,
+        apply_artistic_style,
     ],
 )
 
