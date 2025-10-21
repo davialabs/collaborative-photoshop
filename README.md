@@ -20,7 +20,6 @@ A real-time collaborative image editing platform powered by AI, enabling multipl
 - Edit existing images with natural language instructions
 - Make images more realistic
 - Navigate through image history
-- **NEW: Apply artistic styles** - Transform images with famous artistic styles like Van Gogh, Picasso, Monet, Warhol, and more!
 
 ## 🚀 How It Works
 
@@ -92,25 +91,6 @@ Both endpoints support:
 
 - Davia will help you generate the code or design for your desired interface.
 
-## 🎨 Artistic Style Transfer
-
-Transform your images with famous artistic styles! The new AI-powered style transfer feature supports:
-
-- **Van Gogh**: Bold brushstrokes, vibrant colors, swirling patterns
-- **Picasso**: Cubist geometric shapes, bold lines
-- **Monet**: Impressionist, soft brushstrokes, light effects
-- **Warhol**: Pop art, high contrast, bold colors
-- **Dali**: Surreal, melting effects, dreamlike
-- **Kandinsky**: Abstract geometric shapes, bold colors
-- **Hokusai**: Japanese woodblock, bold outlines, flat colors
-- **Munch**: Expressionist, emotional, bold brushstrokes
-- **Pollock**: Abstract expressionist, splattered paint
-- **Matisse**: Fauvist, bold colors, simplified forms
-- **Cezanne**: Post-impressionist, geometric brushstrokes
-- **Gauguin**: Tropical colors, flat areas
-- **Seurat**: Pointillist, small dots of color
-- **Turner**: Romantic, atmospheric, light effects
-
 ## 🎯 Example Usage
 
 ```python
@@ -119,9 +99,6 @@ Transform your images with famous artistic styles! The new AI-powered style tran
 
 # Voice-based editing
 "Make the colors more vibrant and remove the background"
-
-# Artistic style transfer
-"Apply Van Gogh style to this image" or "Make it look like a Picasso painting"
 ```
 
 ## 🤝 Contributing
