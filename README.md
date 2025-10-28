@@ -1,6 +1,6 @@
 # Real-Time Collaborative Photoshop
 
-**🌐 The app is available online:** [https://sonic-canvas-davia.vercel.app/](https://sonic-canvas-davia.vercel.app/)
+**🌐 The app is available online:** [Deploy to Vercel, Netlify, or any platform](https://vercel.com)
 
 A real-time collaborative image editing platform powered by AI, enabling multiple users to modify and enhance images simultaneously through natural language commands or voice instructions.
 
@@ -14,7 +14,7 @@ A real-time collaborative image editing platform powered by AI, enabling multipl
 ### Available Image Modifications
 
 - Remove image backgrounds
-- Adjust contrast and luminosity
+- Adjust contrast
 - Change color schemes
 - Generate new images from descriptions
 - Edit existing images with natural language instructions
@@ -65,31 +65,18 @@ Both endpoints support:
    python src/collaborative-photoshop/app.py
    ```
 
-   This will open Davia in your browser.
+   This will start the FastAPI server on http://localhost:8000
 
-2. **Create Your Interface:**
+2. **API Documentation:**
 
-   - Once Davia is running, you can describe your desired interface using natural language
-   - Example prompt:
+   - Once the app is running, visit http://localhost:8000/docs for interactive API documentation
+   - You can test the `/process-audio` endpoint through the Swagger UI
 
-     ```
-     Create an AI-powered image editor interface with:
+3. **Usage:**
 
-     Left Panel:
-     - Audio input section with upload/record functionality
-     - Live waveform visualization during recording
-
-     Right Panel:
-     - Large image preview showing the current image
-     - Real-time transcription display
-
-     Design Requirements:
-     - Photoshop-inspired layout with intuitive controls
-     - Seamless integration with process_audio endpoint
-     - Interactive feedback for user actions
-     ```
-
-- Davia will help you generate the code or design for your desired interface.
+   - The API accepts audio files and image data
+   - Upload audio commands along with an image
+   - The agent will process your voice commands and modify the image
 
 ## 🎯 Example Usage
 
