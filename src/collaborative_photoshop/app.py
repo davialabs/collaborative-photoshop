@@ -1,5 +1,5 @@
-from davia import Davia
-from fastapi import UploadFile
+from fastapi import FastAPI, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
 import tempfile
 import os
 from openai import AsyncOpenAI
@@ -28,10 +28,17 @@ class LimitUploadSizeMiddleware(BaseHTTPMiddleware):
         return await call_next(request)
 
 
-app = Davia()
+app = FastAPI()
 client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 app.add_middleware(LimitUploadSizeMiddleware, max_upload_size=10 * 1024 * 1024)  # 10MB
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.post("/process-audio")
@@ -98,4 +105,6 @@ async def process_audio(
 
 
 if __name__ == "__main__":
-    app.run()
+    import uvicorn
+
+    uvicorn.run(app, host="0.0.0.0", port=8000)

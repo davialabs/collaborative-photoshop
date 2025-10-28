@@ -8,7 +8,8 @@ authors = [
 ]
 requires-python = ">=3.12"
 dependencies = [
-    "davia>=0.1.13",
+    "fastapi>=0.115.0",
+    "uvicorn>=0.34.0",
     "matplotlib>=3.10.3",
     "openai-agents>=0.0.17",
     "opencv-python>=4.11.0.86",
