@@ -3,7 +3,6 @@ import base64
 
 from agents import Agent, Runner
 from collaborative_photoshop.image_modifications import (
-    change_color_scheme,
     go_to_image_index,
     next_image,
     previous_image,
@@ -17,7 +16,6 @@ from collaborative_photoshop.model import AgentContext
 agent = Agent(
     name="Image Modifier Agent",
     tools=[
-        change_color_scheme,
         go_to_image_index,
         next_image,
         previous_image,
