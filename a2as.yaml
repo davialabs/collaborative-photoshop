@@ -1,0 +1,246 @@
+manifest:
+  version: "0.1.2"
+  schema: https://a2as.org/cert/schema
+  subject:
+    name: davialabs/collaborative-photoshop
+    source: https://github.com/davialabs/collaborative-photoshop
+    branch: main
+    commit: "8232a516"
+    scope: [src/collaborative_photoshop/agent.py, src/collaborative_photoshop/app.py, src/collaborative_photoshop/image_modifications.py]
+  issued:
+    by: A2AS.org
+    at: '2026-01-26T16:11:15Z'
+  signatures:
+    digest: sha256:8RZI5cBYZbZRNsF9Px-PKlk0NhsUBGzr8HijPff8bak
+    key: ed25519:DcnU3_C4y25341FqeGaZcsnsmaxPWhjUupvoK2Q5RXM
+    sig: ed25519:7tm8E7-EYEpPdflMJeBWLLO94gs6Q9eyGWpt3jikeGhjffWjNSQsES7n8wHEigVNhXZh1p4qMl_4wfOWIsdlCA
+
+agents:
+  agent:
+    type: instance
+    models: [gpt-4.1]
+    tools: [go_to_image_index, next_image, previous_image, generate_image, edit_image, adjust_contrast, remove_background]
+    params:
+      name: Image Modifier Agent
+
+models:
+  gpt-4.1:
+    type: default
+    agents: [agent]
+
+tools:
+  adjust_contrast:
+    type: variable
+    agents: [agent]
+    params:
+      dynamic: "True"
+      description: |-
+        Adjust the contrast of a base64 encoded image by a percentage.
+        THIS FUNCTION DOES NOT NEED THE IMAGE, ONLY THE PERCENTAGE IS A PARAMETER.
+
+        Args:
+            base64_image (str): Base64 encoded image data (with or without data URL prefix)
+            percentage (float): Percentage to adjust contrast (-100 to 100)
+                              Positive values increase contrast, negative values decrease contrast
+
+        Returns:
+            str: Base64 encoded modified image
+  change_color_scheme:
+    type: decorator
+    params:
+      description: |-
+        Apply color scheme transformation.
+        The image is already available in the context and will be automatically processed.
+        You don't need to ask for the image, it is already in the context.
+        Just specify the color scheme to apply.
+        THIS FUNCTION DOES NOT NEED THE IMAGE, ONLY THE SCHEME IS A PARAMETER.
+
+
+        Args:
+            scheme (str): Color scheme to apply. Options:
+                         'grayscale', 'sepia', 'vintage', 'cool', 'warm',
+                         'high_contrast', 'negative', 'enhance_red',
+                         'enhance_green', 'enhance_blue'
+
+        Returns:
+            str: Confirmation message with the applied color scheme
+  edit_image:
+    type: variable
+    agents: [agent]
+    params:
+      dynamic: "True"
+      description: Edit the current image based on a prompt.
+  generate_image:
+    type: variable
+    agents: [agent]
+    params:
+      dynamic: "True"
+  go_to_image_index:
+    type: variable
+    agents: [agent]
+    params:
+      dynamic: "True"
+      description: Navigate to a specific image in the modified_images_b64 list by index.
+  next_image:
+    type: variable
+    agents: [agent]
+    params:
+      dynamic: "True"
+      description: |-
+        Navigate to the next image in the modified_images_b64 list.
+
+        Returns:
+            str: Confirmation message with the new current image index, or a message if already at the last image.
+  previous_image:
+    type: variable
+    agents: [agent]
+    params:
+      dynamic: "True"
+      description: |-
+        Navigate to the previous image in the modified_images_b64 list.
+
+        Returns:
+            str: Confirmation message with the new current image index, or a message if already at the first image.
+  remove_background:
+    type: variable
+    agents: [agent]
+    params:
+      dynamic: "True"
+      description: |-
+        Remove the background from an image using OpenCV's GrabCut algorithm.
+
+        Args:
+            base64_image (str): Base64 encoded image data
+            iterations (int): Number of iterations for grabcut (default: 5)
+
+        Returns:
+            str: Base64 encoded image with transparent background
+
+imports:
+  adjust_contrast: collaborative_photoshop.image_modifications.adjust_contrast
+  Agent: agents.Agent
+  agent: collaborative_photoshop.agent.agent
+  AgentContext: collaborative_photoshop.model.AgentContext
+  asyncio: asyncio
+  AsyncOpenAI: openai.AsyncOpenAI
+  base64: base64
+  BaseHTTPMiddleware: starlette.middleware.base.BaseHTTPMiddleware
+  BytesIO: io.BytesIO
+  CORSMiddleware: fastapi.middleware.cors.CORSMiddleware
+  cv: cv2
+  decode_image: collaborative_photoshop.utils.decode_image
+  edit_image: collaborative_photoshop.image_generator.edit_image
+  encode_image: collaborative_photoshop.utils.encode_image
+  FastAPI: fastapi.FastAPI
+  function_tool: agents.function_tool
+  generate_image: collaborative_photoshop.image_generator.generate_image
+  go_to_image_index: collaborative_photoshop.image_modifications.go_to_image_index
+  Image: PIL.Image
+  ImageEnhance: PIL.ImageEnhance
+  io: io
+  next_image: collaborative_photoshop.image_modifications.next_image
+  np: numpy
+  OpenAI: openai.OpenAI
+  os: os
+  Path: pathlib.Path
+  previous_image: collaborative_photoshop.image_modifications.previous_image
+  remove_background: collaborative_photoshop.image_modifications.remove_background
+  Request: starlette.requests.Request
+  Response: starlette.responses.Response
+  RunContextWrapper: agents.RunContextWrapper
+  Runner: agents.Runner
+  tempfile: tempfile
+  UploadFile: fastapi.UploadFile
+  uvicorn: uvicorn
+
+functions:
+  __init__:
+    type: sync
+    module: src.collaborative_photoshop.app
+    args: [self, app, max_upload_size]
+  adjust_contrast:
+    type: tool
+    module: src.collaborative_photoshop.image_modifications
+    args: [ctx, percentage]
+    params:
+      returns: str
+  change_color_scheme:
+    type: tool
+    module: src.collaborative_photoshop.image_modifications
+    args: [ctx, scheme]
+    params:
+      returns: str
+  dispatch:
+    type: async
+    module: src.collaborative_photoshop.app
+    args: [self, request, call_next]
+  edit_image:
+    type: tool
+    module: src.collaborative_photoshop.image_generator
+    args: [ctx, prompt]
+    params:
+      returns: str
+  generate_image:
+    type: tool
+    module: src.collaborative_photoshop.image_generator
+    args: [ctx, prompt]
+    params:
+      returns: str
+  go_to_image_index:
+    type: tool
+    module: src.collaborative_photoshop.image_modifications
+    args: [ctx, index]
+    params:
+      returns: str
+  main:
+    type: async
+    module: src.collaborative_photoshop.agent
+  next_image:
+    type: tool
+    module: src.collaborative_photoshop.image_modifications
+    args: [ctx]
+    params:
+      returns: str
+  previous_image:
+    type: tool
+    module: src.collaborative_photoshop.image_modifications
+    args: [ctx]
+    params:
+      returns: str
+  process_audio:
+    type: async
+    module: src.collaborative_photoshop.app
+    args: [audio, input_image, current_image_index, images]
+  remove_background:
+    type: tool
+    module: src.collaborative_photoshop.image_modifications
+    args: [ctx, iterations]
+    params:
+      returns: str
+
+variables:
+  OPENAI_API_KEY:
+    type: env
+    params:
+      caller: [os.getenv, AsyncOpenAI]
+      path: [src.collaborative_photoshop.app]
+
+files:
+  .webm:
+    type: literal
+    actions: [write]
+    params:
+      caller: [tempfile.NamedTemporaryFile]
+      delete: "True"
+  final_image.png:
+    type: literal
+    actions: [write]
+    params:
+      caller: [open]
+      alias: [f]
+  project/openai-vivalehack/image_modifications_test/cat.png:
+    type: literal
+    actions: [read]
+    params:
+      caller: [open, main]
+      alias: [img_file]
